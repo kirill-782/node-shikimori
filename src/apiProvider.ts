@@ -26,11 +26,17 @@ export interface ClientOptions {
   maxCallsPerMinute?: number,
 }
 
+export interface TypedToken {
+  type: 'bearer' | 'selfbot',
+
+  token: string
+}
+
 /**
  * Represents an OAuth2 access token, which is a string value that grants access to protected resources.
  * If undefined, the client does not have an access token.
  */
-export type Token = string | undefined;
+export type Token = string | undefined | TypedToken;
 
 /** @interface */
 export type RequestMethods = Record<'get' | 'post' | 'patch' | '_delete', HTTPMethod>;
@@ -74,7 +80,12 @@ export const apiProvider = ({
     });
 
     if (accessToken) {
-      headers.set('Authorization', `Bearer ${accessToken}`);
+      if(typeof accessToken  === "string")
+        headers.set('Authorization', `Bearer ${accessToken}`);
+      else if(accessToken.type === "bearer")
+        headers.set('Authorization', `Bearer ${accessToken.token}`);
+      else if(accessToken.type === "selfbot")
+        headers.set('Cookie', `_kawai_session=${accessToken.token}`);
     }
 
     if (shouldUseBodyParams && params) {
